@@ -6,6 +6,8 @@ import (
 	"os"
 	"rest-hw"
 	"rest-hw/pkg/handler"
+	"rest-hw/pkg/repository"
+	"rest-hw/pkg/service"
 )
 
 func main() {
@@ -23,7 +25,9 @@ func main() {
 
 	gin.SetMode(ENV)
 
-	handlers := new(handler.Handler)
+	repos := repository.NewRepository()
+	services := service.NewService(repos)
+	handlers := handler.NewHandler(services)
 
 	server := new(appServer.Server)
 
