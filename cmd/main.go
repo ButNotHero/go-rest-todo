@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"log"
-	"os"
 	"rest-hw"
 	"rest-hw/pkg/handler"
 	"rest-hw/pkg/repository"
@@ -11,19 +11,14 @@ import (
 )
 
 func main() {
-	PORT := os.Getenv("PORT")
-	// debug или release
-	ENV := os.Getenv("ENV")
-
-	if PORT == "" {
-		PORT = "3000"
+	if err := initConfig(); err != nil {
+		log.Fatalf("Error initializing config: %v", err.Error())
 	}
 
-	if ENV == "" {
-		ENV = "debug"
-	}
+	env := viper.GetString("env")
+	port := viper.GetString("port")
 
-	gin.SetMode(ENV)
+	gin.SetMode(env)
 
 	repos := repository.NewRepository()
 	services := service.NewService(repos)
@@ -31,7 +26,22 @@ func main() {
 
 	server := new(appServer.Server)
 
-	if err := server.Run(PORT, handlers.InitRoutes()); err != nil {
+	if err := server.Run(port, handlers.InitRoutes()); err != nil {
 		log.Fatalf("Error running server: %v", err.Error())
 	}
+}
+
+func initConfig() error {
+	// Set the file name of the configurations file
+	viper.SetConfigName("config")
+
+	// Set the path to look for the configurations file
+	viper.AddConfigPath("config")
+
+	// Enable VIPER to read Environment Variables
+	viper.AutomaticEnv()
+
+	viper.SetConfigType("yml")
+
+	return viper.ReadInConfig()
 }
