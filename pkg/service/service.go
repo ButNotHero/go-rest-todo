@@ -1,8 +1,12 @@
 package service
 
-import "rest-hw/pkg/repository"
+import (
+	"rest-hw/model"
+	"rest-hw/pkg/repository"
+)
 
 type Authorization interface {
+	CreateUser(user model.User) (int, error)
 }
 
 type TodoList interface {
@@ -18,5 +22,9 @@ type Service struct {
 }
 
 func NewService(repos *repository.Repository) *Service {
-	return &Service{}
+	return &Service{
+		Authorization: NewAuthService(repos.Authorization),
+		TodoList:      nil,
+		TodoItem:      nil,
+	}
 }

@@ -1,4 +1,4 @@
-CREATE TABLE users
+CREATE TABLE auth_user
 (
   id            serial       NOT NULL unique,
   name          varchar(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE todo_list
 CREATE TABLE user_list
 (
   id      serial                                          NOT NULL unique,
-  user_id int references users (id) on delete cascade     NOT NULL,
+  user_id int references auth_user (id) on delete cascade     NOT NULL,
   list_id int references todo_list (id) on delete cascade NOT NULL
 );
 
