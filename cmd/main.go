@@ -2,8 +2,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"log"
+	"os"
 	"rest-hw"
 	"rest-hw/pkg/handler"
 	"rest-hw/pkg/repository"
@@ -12,22 +15,39 @@ import (
 
 func main() {
 	if err := initConfig(); err != nil {
-		log.Fatalf("Error initializing config: %v", err.Error())
+		logrus.Fatalf("Error initializing config: %v", err.Error())
 	}
 
-	env := viper.GetString("env")
+	mode := viper.GetString("mode")
 	port := viper.GetString("port")
 
-	gin.SetMode(env)
+	gin.SetMode(mode)
 
-	repos := repository.NewRepository()
+	if err := godotenv.Load(); err != nil {
+		logrus.Fatalf("Error loading environment variables: %v", err.Error())
+	}
+
+	db, err := repository.NewPostgresDB(repository.Config{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		Password: os.Getenv("POSTGRES_PW"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+	})
+
+	if err != nil {
+		logrus.Fatalf("Error initializing Postgres: %s", err.Error())
+	}
+
+	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	handlers := handler.NewHandler(services)
 
 	server := new(appServer.Server)
 
 	if err := server.Run(port, handlers.InitRoutes()); err != nil {
-		log.Fatalf("Error running server: %v", err.Error())
+		logrus.Fatalf("Error running server: %v", err.Error())
 	}
 }
 
