@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	tableUser     = "auth_user"
+	tableAuthUser = "auth_user"
 	tableTodoList = "todo_list"
 	tableUserList = "user_list"
 	tableTodoItem = "todo_item"
