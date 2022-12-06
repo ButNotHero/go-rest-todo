@@ -11,7 +11,7 @@ func (h *Handler) createList(c *gin.Context) {
 	userId, ok := getUserId(c)
 
 	if ok != nil {
-		newErrorResponse(c, "Create list invalid userId", http.StatusInternalServerError, "Invalid userId")
+		newErrorResponse(c, "Create list invalid userId", http.StatusInternalServerError, "Invalid user id")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h *Handler) getAllLists(c *gin.Context) {
 	userId, ok := getUserId(c)
 
 	if ok != nil {
-		newErrorResponse(c, "Get all lists invalid userId", http.StatusBadRequest, "Invalid userId")
+		newErrorResponse(c, "Get all lists invalid userId", http.StatusBadRequest, "Invalid user id")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) getListById(c *gin.Context) {
 	userId, ok := getUserId(c)
 
 	if ok != nil {
-		newErrorResponse(c, "Get list by id. Invalid userId", http.StatusInternalServerError, "Invalid userId")
+		newErrorResponse(c, "Get list by id. Invalid userId", http.StatusInternalServerError, "Invalid user id")
 		return
 	}
 
@@ -88,5 +88,28 @@ func (h *Handler) updateList(c *gin.Context) {
 }
 
 func (h *Handler) deleteList(c *gin.Context) {
+	userId, ok := getUserId(c)
 
+	if ok != nil {
+		newErrorResponse(c, "Delete list. Invalid userId", http.StatusInternalServerError, "Invalid user id")
+		return
+	}
+
+	listId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		newErrorResponse(c, "Delete list. Invalid id", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.services.TodoList.Delete(userId, listId)
+
+	if err != nil {
+		newErrorResponse(c, "Delete list", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResponse{
+		Status: "ok",
+	})
 }
