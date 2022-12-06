@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"rest-hw/model"
+	"strconv"
 )
 
 func (h *Handler) createList(c *gin.Context) {
@@ -34,14 +35,14 @@ func (h *Handler) createList(c *gin.Context) {
 }
 
 type getAllListsResponse struct {
-	Data []model.TodoList `json:"data"`
+	Lists []model.TodoList `json:"data"`
 }
 
 func (h *Handler) getAllLists(c *gin.Context) {
 	userId, ok := getUserId(c)
 
 	if ok != nil {
-		newErrorResponse(c, "Get all lists invalid userId", http.StatusInternalServerError, "Invalid userId")
+		newErrorResponse(c, "Get all lists invalid userId", http.StatusBadRequest, "Invalid userId")
 		return
 	}
 
@@ -53,12 +54,33 @@ func (h *Handler) getAllLists(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, getAllListsResponse{
-		Data: lists,
+		Lists: lists,
 	})
 }
 
 func (h *Handler) getListById(c *gin.Context) {
+	userId, ok := getUserId(c)
 
+	if ok != nil {
+		newErrorResponse(c, "Get list by id. Invalid userId", http.StatusInternalServerError, "Invalid userId")
+		return
+	}
+
+	listId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		newErrorResponse(c, "Get list by id. Invalid id", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	list, err := h.services.TodoList.GetById(userId, listId)
+
+	if err != nil {
+		newErrorResponse(c, "Get list by id", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, list)
 }
 
 func (h *Handler) updateList(c *gin.Context) {
