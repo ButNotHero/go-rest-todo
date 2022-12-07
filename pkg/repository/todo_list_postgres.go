@@ -93,9 +93,6 @@ func (r *TodoListPostgres) Update(userId, listId int, input model.UpdateListInpu
 
 	args = append(args, listId, userId)
 
-	fmt.Printf("\nupdateQuery: %s", query)
-	fmt.Printf("\nargs: %v\n", args)
-
 	_, err := r.db.Exec(query, args...)
 
 	return err

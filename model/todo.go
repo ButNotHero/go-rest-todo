@@ -21,7 +21,7 @@ type TodoItem struct {
 	Done        bool   `json:"done" db:"done"`
 }
 
-type ListsItem struct {
+type ListItem struct {
 	Id     int
 	ListId int
 	ItemId int
@@ -34,6 +34,20 @@ type UpdateListInput struct {
 
 func (i UpdateListInput) Validate() error {
 	if i.Title == nil && i.Description == nil {
+		return errors.New("update struct is empty")
+	}
+
+	return nil
+}
+
+type UpdateListItemInput struct {
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Done        *bool   `json:"done"`
+}
+
+func (i UpdateListItemInput) Validate() error {
+	if i.Title == nil && i.Description == nil && i.Done == nil {
 		return errors.New("update struct is empty")
 	}
 

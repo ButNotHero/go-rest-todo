@@ -24,6 +24,7 @@ type TodoItem interface {
 	GetAll(userId, listId int) ([]model.TodoItem, error)
 	GetById(userId, itemId int) (model.TodoItem, error)
 	Delete(userId, itemId int) error
+	Update(userId, itemId int, input model.UpdateListItemInput) error
 }
 
 type Service struct {
