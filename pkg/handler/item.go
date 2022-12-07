@@ -1,13 +1,69 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"rest-hw/model"
+	"strconv"
+)
 
 func (h *Handler) createItem(c *gin.Context) {
+	userId, ok := getUserId(c)
 
+	if ok != nil {
+		newErrorResponse(c, "Create item. Invalid userId", http.StatusInternalServerError, "Invalid user id")
+		return
+	}
+
+	listId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		newErrorResponse(c, "Create item. Invalid id", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var input model.TodoItem
+
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, "Create item. Invalid input model", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	todoItemId, err := h.services.TodoItem.Create(userId, listId, input)
+
+	if err != nil {
+		newErrorResponse(c, "Create item. Error creating item. ", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"id": todoItemId,
+	})
 }
 
 func (h *Handler) getAllItems(c *gin.Context) {
+	userId, ok := getUserId(c)
 
+	if ok != nil {
+		newErrorResponse(c, "Get all items. Invalid userId", http.StatusInternalServerError, "Invalid user id")
+		return
+	}
+
+	listId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		newErrorResponse(c, "Get all items. Invalid id", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	items, err := h.services.TodoItem.GetAll(userId, listId)
+
+	if err != nil {
+		newErrorResponse(c, "Get all items. Error when getting items", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, items)
 }
 
 func (h *Handler) getItemById(c *gin.Context) {
