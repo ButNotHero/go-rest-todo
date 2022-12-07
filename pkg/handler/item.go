@@ -96,5 +96,28 @@ func (h *Handler) updateItem(c *gin.Context) {
 }
 
 func (h *Handler) deleteItem(c *gin.Context) {
+	userId, ok := getUserId(c)
 
+	if ok != nil {
+		newErrorResponse(c, "Delete item by id. Invalid userId", http.StatusInternalServerError, "Invalid user id")
+		return
+	}
+
+	itemId, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		newErrorResponse(c, "Delete item by id. Invalid id", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.services.TodoItem.Delete(userId, itemId)
+
+	if err != nil {
+		newErrorResponse(c, "Delete item by id. Error when getting item", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResponse{
+		Status: "ok",
+	})
 }
