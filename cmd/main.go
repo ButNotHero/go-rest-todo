@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+	"os/signal"
 	"rest-hw"
 	"rest-hw/pkg/handler"
 	"rest-hw/pkg/repository"
 	"rest-hw/pkg/service"
+	"syscall"
 )
 
 func main() {
@@ -48,8 +51,24 @@ func main() {
 
 	server := new(appServer.Server)
 
-	if err := server.Run(port, handlers.InitRoutes()); err != nil {
-		logrus.Fatalf("Error running server: %v", err.Error())
+	go func() {
+		if err := server.Run(port, handlers.InitRoutes()); err != nil {
+			logrus.Fatalf("Error running server: %v", err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Print("App shutting down")
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		logrus.Errorf("Error shutting down server: %v", err)
+	}
+
+	if err := db.Close(); err != nil {
+		logrus.Errorf("Error closing database connection: %v", err)
 	}
 }
 
