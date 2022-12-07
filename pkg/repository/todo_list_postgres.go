@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"rest-hw/model"
+	"strings"
 )
 
 type TodoListPostgres struct {
@@ -62,6 +63,40 @@ func (r *TodoListPostgres) GetById(userId int, listId int) (model.TodoList, erro
 func (r *TodoListPostgres) Delete(userId, listId int) error {
 	query := fmt.Sprintf("DELETE FROM %s tl USING %s ul WHERE tl.id = ul.list_id AND ul.user_id=$1 AND ul.list_id=$2", tableTodoList, tableUserList)
 	_, err := r.db.Exec(query, userId, listId)
+
+	return err
+}
+
+func (r *TodoListPostgres) Update(userId, listId int, input model.UpdateListInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if input.Title != nil {
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
+		args = append(args, *input.Title)
+		argId++
+	}
+
+	if input.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, *input.Description)
+		argId++
+	}
+
+	// title=$1
+	// description=$2
+	// title=$1, description=$2
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf("UPDATE %s tl SET %s FROM %s ul WHERE tl.id = ul.list_id AND ul.list_id=$%d AND ul.user_id=$%d", tableTodoList, setQuery, tableUserList, argId, argId+1)
+
+	args = append(args, listId, userId)
+
+	fmt.Printf("\nupdateQuery: %s", query)
+	fmt.Printf("\nargs: %v\n", args)
+
+	_, err := r.db.Exec(query, args...)
 
 	return err
 }
